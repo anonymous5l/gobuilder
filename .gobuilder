@@ -1,0 +1,16 @@
+packages:
+    hello-world:
+        package: gobuilder/cli
+        verbose-package: gobuilder/cli/env
+        build-flag: []
+        build-mode: docker
+        build-os: linux
+        build-arch: amd64
+        version:
+            major: 1
+            minor: 1
+            patch: 2
+        dest: bin
+version: 1.18.3
+parallel: 5
+auto-upgrade: true
