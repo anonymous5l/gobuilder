@@ -3,11 +3,13 @@ package main
 import (
 	"crypto/tls"
 	"io/ioutil"
+	"os"
 )
 
 type GoBuilderServerPackage struct {
 	Env          map[string]string `yaml:"env"`
 	BeforeAction string            `yaml:"before-action"`
+	Perm         os.FileMode       `yaml:"perm,omitempty"`
 	Executable   string            `yaml:"executable"`
 	AfterAction  string            `yaml:"after-action"`
 }

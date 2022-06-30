@@ -14,7 +14,7 @@ build `x86/x64` program on `Linux` or `Windows`.
 * support host build
 * support insert custom `git` variable to program
 * version control auto upgrade `patch`
-* support remote deploy program protocol use QUIC
+* support remote deploy program
 
 ## TODO
 * remote build
@@ -45,9 +45,14 @@ packages:
             minor: 1
             patch: 2 # if `auto-upgrade` == true patch auto increment each build
         dest: bin # binary output directory
+        deploy: '127.0.0.1:2030' # remote gobuilder-server
+        clean-after-deploy: true # after remote deploy remove local binary file
 version: 1.18.3 # expect golang version
 parallel: 5 # build how many project in once
 auto-upgrade: true # auto increment version.patch
+ca: gobuilder-root.pem # remote deploy only cert ca
+cert: gobuilder-client.pem # remote deploy only client cert
+key: gobuilder-client.key # remote deploy only client key
 ```
 
 put code in `.gobuilder` then
@@ -61,3 +66,49 @@ $: cd project-dir
 $: gobuilder
 $: gobuilder hello-world
 ```
+
+## Remote deploy
+
+### Build
+
+```bash
+$: go build && mkdir bin && ./gobuilder
+```
+
+### Usage
+
+generate root ca, server cert & key, client cert & key
+
+```bash
+$: ./gobuilder-server keygen
+```
+
+server use `QUIC` protocol base on `UDP` fast and safe
+
+create `server.yaml`
+
+```bash
+address: '<IPAddress>:2030'
+ca: gobuilder-root.pem # root ca pem
+cert: gobuilder-server.pem # server cert pem
+key: gobuilder-server.key # server rsa 2048 key
+handler: 128 # max handle in same time use ants goroutine library
+
+packages:
+  hello-world:
+    before-action: /root/gobuilder/gobuilder-before.sh # running before command
+    perm: 0755 # default 0755
+    executable: /root/gobuilder/hello-world
+    after-action: /root/gobuilder/gobuilder-after.sh # running after update command 
+  
+  # ...
+```
+
+running gobuilder deploy server
+
+```bash
+$: ./gobuilder-server
+Golang build tool server side
+```
+
+if modify config use `kill -USR2 <PID>` to reload config `packages` section

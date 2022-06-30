@@ -11,10 +11,14 @@ import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
-	"sync"
+	"os/signal"
+	"syscall"
 )
 
-var ServerConfig *GoBuilderServerConfig
+var (
+	ServerConfigPath string
+	ServerConfig     *GoBuilderServerConfig
+)
 
 func motd() {
 	fmt.Println("\u001B[32mGolang build tool server side\u001B[0m")
@@ -39,7 +43,7 @@ func main() {
 	motd()
 
 	commands := os.Args[1:]
-	configPath := "server.yaml"
+	ServerConfigPath = "server.yaml"
 
 	if len(commands) > 0 {
 		switch commands[0] {
@@ -49,11 +53,11 @@ func main() {
 			}
 			return
 		default:
-			configPath = commands[0]
+			ServerConfigPath = commands[0]
 		}
 	}
 
-	config, err := readConfig(configPath)
+	config, err := readConfig(ServerConfigPath)
 	if err != nil {
 		log.Error("read config file failed", err)
 		return
@@ -114,11 +118,12 @@ func main() {
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	signalChan := make(chan os.Signal, 1)
+	closeChan := make(chan struct{}, 1)
+	signal.Notify(signalChan, syscall.SIGUSR2, syscall.SIGINT)
 
 	go func() {
-		defer wg.Done()
+		defer close(closeChan)
 		for {
 			conn, err := listener.Accept(context.Background())
 			if err != nil {
@@ -135,5 +140,30 @@ func main() {
 		}
 	}()
 
-	wg.Wait()
+	for {
+		select {
+		case sig, ok := <-signalChan:
+			if ok {
+				switch sig {
+				case syscall.SIGUSR2:
+					config, err = readConfig(ServerConfigPath)
+					if err != nil {
+						log.Error("read config file failed", err)
+					} else {
+						ServerConfig.Packages = config.Packages
+						log.Ok("reload config file")
+					}
+				case syscall.SIGINT:
+					if err = listener.Close(); err != nil {
+						log.Error("listener close failed", err)
+						return
+					}
+				}
+			}
+		case _, ok := <-closeChan:
+			if !ok {
+				return
+			}
+		}
+	}
 }

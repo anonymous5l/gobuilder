@@ -59,11 +59,15 @@ func HandlePackageReplaceCommand(stream quic.Stream) error {
 		return err
 	}
 
-	o, err := os.OpenFile(pkg.Executable, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	filePerm := os.FileMode(0755)
+	if pkg.Perm > 0 {
+		filePerm = pkg.Perm
+	}
+
+	o, err := os.OpenFile(pkg.Executable, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
 	if err != nil {
 		return err
 	}
-	defer o.Close()
 
 	n, err := o.Write(request.Data.Data)
 	if err != nil {
@@ -71,6 +75,10 @@ func HandlePackageReplaceCommand(stream quic.Stream) error {
 	}
 	if uint64(n) != request.Data.Size {
 		return errors.New("data corrupt")
+	}
+
+	if err := o.Close(); err != nil {
+		return err
 	}
 
 	afterStdout, err := ExecAction(pkg.AfterAction, request.Package.Data, pkg, request)

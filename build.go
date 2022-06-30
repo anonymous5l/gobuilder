@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -140,7 +141,7 @@ func ProcessTask(wg *sync.WaitGroup, t Task) error {
 		if err := pktError.Read(stream); err != nil {
 			return err
 		}
-		log.Error("deploy failed",
+		log.Error("`"+t.Name+"` deploy failed",
 			"["+strconv.FormatUint(uint64(pktError.ErrCode), 10)+"]",
 			pktError.ErrMessage.Data)
 		return nil
@@ -153,10 +154,10 @@ func ProcessTask(wg *sync.WaitGroup, t Task) error {
 
 	logOutput := []any{"`" + t.Name + "` deploy completed"}
 	if response.BeforeStdout.Size > 0 {
-		logOutput = append(logOutput, "- before output", response.BeforeStdout.Data)
+		logOutput = append(logOutput, "\n  - before output", strings.TrimSpace(response.BeforeStdout.Data))
 	}
 	if response.AfterStdout.Size > 0 {
-		logOutput = append(logOutput, "- after output", response.AfterStdout.Data)
+		logOutput = append(logOutput, "\n  -  after output", strings.TrimSpace(response.AfterStdout.Data))
 	}
 
 	log.Ok(logOutput...)
