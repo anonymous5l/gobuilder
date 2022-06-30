@@ -26,7 +26,7 @@ type GoBuilderPackage struct {
 	Version          *Version `yaml:"version,omitempty"`
 	Dest             string   `yaml:"dest,omitempty"`
 	Deploy           string   `yaml:"deploy,omitempty"` // remote quic path
-	CleanAfterDeploy bool     `yaml:"cleanAfterDeploy,omitempty"`
+	CleanAfterDeploy bool     `yaml:"clean-after-deploy,omitempty"`
 }
 
 type GoBuilderConfig struct {

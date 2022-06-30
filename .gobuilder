@@ -21,8 +21,6 @@ packages:
             minor: 1
             patch: 61
         dest: bin
-        deploy: 127.0.0.1:2030
-        cleanAfterDeploy: true
 version: 1.18.3
 parallel: 5
 auto-upgrade: true
