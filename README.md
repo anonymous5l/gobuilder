@@ -14,6 +14,7 @@ build `x86/x64` program on `Linux` or `Windows`.
 * support host build
 * support insert custom `git` variable to program
 * version control auto upgrade `patch`
+* support remote deploy program protocol use QUIC
 
 ## TODO
 * remote build
