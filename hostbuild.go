@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"path"
+	"gobuilder/log"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -18,18 +19,18 @@ func GitInfo(pkg string) (string, string) {
 	if err := gitCommand.Start(); err == nil {
 		if err := gitCommand.Wait(); err != nil {
 			// ignore git command error
-			Warn("package", pkg, "resolve git branch failed", err)
+			log.Warn("package", pkg, "resolve git branch failed", err)
 		} else {
-			gitBranch = string(gitCommand.Stdout())
+			gitBranch = strings.TrimSpace(string(gitCommand.Stdout()))
 		}
 	}
 
 	gitShortHashCommand := NewGitCommand("rev-parse", "--verify", "--short", "HEAD")
 	if err := gitShortHashCommand.Start(); err == nil {
 		if err := gitShortHashCommand.Wait(); err != nil {
-			Warn("package", pkg, "resolve git hash failed", err)
+			log.Warn("package", pkg, "resolve git hash failed", err)
 		} else {
-			gitShortHash = string(gitShortHashCommand.Stdout())
+			gitShortHash = strings.TrimSpace(string(gitShortHashCommand.Stdout()))
 		}
 	}
 
@@ -65,7 +66,7 @@ func GoBuildArgs(gitBranch, gitShortHash, goVersion, name string, pkg *GoBuilder
 	}
 
 	if pkg.Dest != "" {
-		args = append(args, "-o", path.Join(pkg.Dest, name))
+		args = append(args, "-o", filepath.Join(pkg.Dest, name))
 	}
 
 	return append(args, pkg.Package)
@@ -76,7 +77,7 @@ func HostBuild(name string, pkg *GoBuilderPackage) error {
 
 	goVersion := strings.TrimPrefix(runtime.Version(), "go")
 	if goVersion != BuildConfig.Version {
-		Warn(fmt.Sprintf("host go version not match config version %s<->%s", goVersion, BuildConfig.Version))
+		log.Warn(fmt.Sprintf("host go version not match config version %s<->%s", goVersion, BuildConfig.Version))
 		BuildConfig.Version = goVersion
 	}
 
@@ -93,7 +94,7 @@ func HostBuild(name string, pkg *GoBuilderPackage) error {
 	cmd.AppendArgs("build").
 		AppendArgs(args...)
 
-	Log("Start building host package `" + name + "`")
+	log.Log("Start building host package `" + name + "`")
 
 	if err := cmd.Start(); err != nil {
 		return err

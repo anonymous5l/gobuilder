@@ -1,11 +1,13 @@
-## Go build tool
+# Go build tool
 
-### Introduce
+## Introduce
+
+```NOTICE: require go version at least 1.18.x```
 
 project for `Apple Silicon` machine. 
 build `x86/x64` program on `Linux` or `Windows`.
 
-### Features
+## Features
 
 * support batch build
 * support docker build
@@ -13,12 +15,12 @@ build `x86/x64` program on `Linux` or `Windows`.
 * support insert custom `git` variable to program
 * version control auto upgrade `patch`
 
-### TODO
+## TODO
 * remote build
 * before build run `go test`
 * ...
 
-### Usage
+## Usage
 
 create `.gobuild` file to project dir.
 

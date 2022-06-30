@@ -16,6 +16,7 @@ import (
 	"github.com/k0kubun/go-ansi"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/schollz/progressbar/v3"
+	"gobuilder/log"
 	"io"
 	"math"
 	"path/filepath"
@@ -141,7 +142,7 @@ func DockerBuild(name string, pkg *GoBuilderPackage) error {
 		}
 		defer pullResponse.Close()
 
-		Log("Pulling docker image", pkg.BuildOS+"/"+pkg.BuildArch, "...")
+		log.Log("Pulling docker image", pkg.BuildOS+"/"+pkg.BuildArch, "...")
 
 		decoder := json.NewDecoder(pullResponse)
 

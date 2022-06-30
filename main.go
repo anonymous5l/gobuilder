@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"gobuilder/log"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
@@ -11,17 +11,9 @@ import (
 
 func motd() {
 	fmt.Println("\u001B[32mGolang build tool\u001B[0m")
-}
-
-func GoBuild(name string, pkg *GoBuilderPackage) error {
-	// check project exists
-	if pkg.BuildMode == "host" {
-		return HostBuild(name, pkg)
-	} else if pkg.BuildMode == "docker" {
-		return DockerBuild(name, pkg)
-	}
-
-	return errors.New("invalid `build-mode`")
+	log.Log("GoHostEnv")
+	log.Log("  Version:", strings.TrimPrefix(HostGoEnv["GOVERSION"], "go"))
+	log.Log("  OS/ARCH:", HostGoEnv["GOHOSTOS"]+"/"+HostGoEnv["GOHOSTARCH"])
 }
 
 var (
@@ -35,16 +27,16 @@ func init() {
 		// read go env
 		cmd := NewGoCommand("env", "-json")
 		if err := cmd.Start(); err != nil {
-			Error("start process failed", err)
+			log.Error("start process failed", err)
 			return
 		}
 		if err := cmd.Wait(); err != nil {
-			Error("exec process failed", err)
+			log.Error("exec process failed", err)
 			return
 		}
 
 		if err := cmd.JSONStdout(&HostGoEnv); err != nil {
-			Error("unmarshal json failed", err)
+			log.Error("unmarshal json failed", err)
 			return
 		}
 	})
@@ -58,28 +50,32 @@ type Task struct {
 func main() {
 	motd()
 
-	o, err := os.Open(".gobuilder")
+	// read config file suffix
+	goBuilderEnv := os.Getenv("GOBUILDER_ENV")
+
+	goBuilderConfigPath := ".gobuilder"
+	if goBuilderEnv != "" {
+		goBuilderConfigPath += "." + goBuilderEnv
+	}
+
+	o, err := os.Open(goBuilderConfigPath)
 	if err != nil {
-		Error("`.gobuilder` invalid")
+		log.Error("`" + goBuilderConfigPath + "` invalid")
 		return
 	}
 
 	err = yaml.NewDecoder(o).Decode(&BuildConfig)
 	if err != nil {
-		Error("yaml decode file failed", err)
+		log.Error("yaml decode file failed", err)
 		return
 	}
 
 	if err := o.Close(); err != nil {
-		Error("close file failed", err)
+		log.Error("close file failed", err)
 		return
 	}
 
 	commands := os.Args[1:]
-
-	Log("GoHostEnv")
-	Log("  Version:", strings.TrimPrefix(HostGoEnv["GOVERSION"], "go"))
-	Log("  OS/ARCH:", HostGoEnv["GOHOSTOS"]+"/"+HostGoEnv["GOHOSTARCH"])
 
 	parallel := 1
 	if BuildConfig.Parallel > 1 {
@@ -100,15 +96,9 @@ func main() {
 					parallelWaitGroup.Done()
 					return
 				}
-				if err := GoBuild(t.Name, t.Package); err != nil {
-					Error("build package `"+t.Name+"` failed", err)
-				} else {
-					Ok("`" + t.Name + "` build completed")
+				if err := ProcessTask(&wg, t); err != nil {
+					log.Error("build package `"+t.Name+"` failed", err)
 				}
-				if t.Package.Version != nil {
-					t.Package.Version.Patch += 1
-				}
-				wg.Done()
 			}
 		}()
 	}
@@ -140,17 +130,17 @@ func main() {
 	if BuildConfig.AutoUpgrade {
 		configBytes, err := yaml.Marshal(BuildConfig)
 		if err != nil {
-			Error("marshal config failed", err)
+			log.Error("marshal config failed", err)
 			return
 		}
-		o, err := os.Create(".gobuilder")
+		o, err := os.Create(goBuilderConfigPath)
 		if err != nil {
-			Error("create config failed", err)
+			log.Error("create config failed", err)
 			return
 		}
 		defer o.Close()
 		if _, err := o.Write(configBytes); err != nil {
-			Error("write config failed", err)
+			log.Error("write config failed", err)
 			return
 		}
 	}

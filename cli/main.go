@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gobuilder/cli/env"
+	"gobuilder/env"
 )
 
 func main() {

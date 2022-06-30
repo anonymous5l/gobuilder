@@ -1,7 +1,9 @@
 package main
 
+import "gobuilder/log"
+
 func AnalyzeHandle() error {
-	Log("Analyze handle")
+	log.Log("Analyze handle")
 
 	return nil
 }
