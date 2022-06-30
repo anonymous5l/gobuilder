@@ -23,8 +23,6 @@ build `x86/x64` program on `Linux` or `Windows`.
 
 ## Usage
 
-create `.gobuild` file to project dir.
-
 ```yaml
 packages:
     hello-world: # project name output binary name
@@ -55,7 +53,7 @@ cert: gobuilder-client.pem # remote deploy only client cert
 key: gobuilder-client.key # remote deploy only client key
 ```
 
-put code in `.gobuilder` then
+put code in `project-dir/.gobuilder` then
 
 ```bash
 go get -u github.com/anonymous5l/gobuilder
@@ -73,6 +71,12 @@ $: gobuilder hello-world
 
 ```bash
 $: go build && mkdir bin && ./gobuilder
+```
+
+or 
+
+```bash
+$: go build gobuilder/server -o gobuilder-server
 ```
 
 ### Usage
@@ -111,4 +115,4 @@ $: ./gobuilder-server
 Golang build tool server side
 ```
 
-if modify config use `kill -USR2 <PID>` to reload config `packages` section
+if modify `server.yaml` config use `kill -USR2 <PID>` to reload config `packages` section
