@@ -12,6 +12,10 @@ type Version struct {
 	Patch int `json:"patch"`
 }
 
+func (v Version) Clone() Version {
+	return Version{Major: v.Major, Minor: v.Minor, Patch: v.Patch}
+}
+
 func (v Version) String() string {
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
@@ -34,6 +38,7 @@ type GoBuilderConfig struct {
 	Version     string                       `yaml:"version,omitempty"` // golang version only build mode docker working
 	Parallel    int                          `yaml:"parallel,omitempty"`
 	AutoUpgrade bool                         `yaml:"auto-upgrade"`
+	Verbose     bool                         `yaml:"verbose"`
 	CA          string                       `yaml:"ca,omitempty"`
 	Cert        string                       `yaml:"cert,omitempty"`
 	Key         string                       `yaml:"key,omitempty"`

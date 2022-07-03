@@ -15,7 +15,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -37,13 +36,15 @@ func ProcessTask(wg *sync.WaitGroup, t Task) error {
 		return err
 	}
 
-	log.Ok("`" + t.Name + "` build completed")
+	oldVersion := t.Package.Version.Clone()
+
 	if t.Package.Version != nil {
 		t.Package.Version.Patch += 1
 	}
 
 	// try push deploy
 	if t.Package.Deploy == "" {
+		log.Ok("build completed", oldVersion.String(), "->", t.Package.Version.String(), "-", t.Name)
 		return nil
 	}
 
@@ -69,6 +70,8 @@ func ProcessTask(wg *sync.WaitGroup, t Task) error {
 		ServerName:   "gobuilder-quic",
 	}
 
+	log.Debug("dial", t.Package.Deploy, "-", t.Name)
+
 	remote, err := quic.DialAddrContext(ctx, t.Package.Deploy, tlsConfig, nil)
 	if err != nil {
 		return err
@@ -77,6 +80,8 @@ func ProcessTask(wg *sync.WaitGroup, t Task) error {
 	// calc binary sha256
 
 	binaryPath := filepath.Join(t.Package.Dest, t.Name)
+
+	log.Debug("read binary", t.Package.Dest, "-", t.Name)
 
 	o, err := os.Open(binaryPath)
 	if err != nil {
@@ -152,15 +157,9 @@ func ProcessTask(wg *sync.WaitGroup, t Task) error {
 		return err
 	}
 
-	logOutput := []any{"`" + t.Name + "` deploy completed"}
-	if response.BeforeStdout.Size > 0 {
-		logOutput = append(logOutput, "\n  - before output", strings.TrimSpace(response.BeforeStdout.Data))
-	}
-	if response.AfterStdout.Size > 0 {
-		logOutput = append(logOutput, "\n  -  after output", strings.TrimSpace(response.AfterStdout.Data))
-	}
+	log.Debug(t.Name, "-", t.Package.Package, "-", "bstdout", response.BeforeStdout.Data, "astdout", response.AfterStdout.Data)
 
-	log.Ok(logOutput...)
+	log.Ok("deploy completed", oldVersion.String(), "->", t.Package.Version.String(), "-", t.Name)
 
 	if t.Package.CleanAfterDeploy {
 		if err := os.RemoveAll(binaryPath); err != nil {

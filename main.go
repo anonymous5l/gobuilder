@@ -1,46 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"gobuilder/log"
 	"gopkg.in/yaml.v3"
 	"os"
-	"strings"
 	"sync"
 )
 
-func motd() {
-	fmt.Println("\u001B[32mGolang build tool\u001B[0m")
-	log.Log("GoHostEnv")
-	log.Log("  Version:", strings.TrimPrefix(HostGoEnv["GOVERSION"], "go"))
-	log.Log("  OS/ARCH:", HostGoEnv["GOHOSTOS"]+"/"+HostGoEnv["GOHOSTARCH"])
-}
-
-var (
-	readEnvOnce sync.Once
-	HostGoEnv   map[string]string
-	BuildConfig GoBuilderConfig
-)
-
-func init() {
-	readEnvOnce.Do(func() {
-		// read go env
-		cmd := NewGoCommand("env", "-json")
-		if err := cmd.Start(); err != nil {
-			log.Error("start process failed", err)
-			return
-		}
-		if err := cmd.Wait(); err != nil {
-			log.Error("exec process failed", err)
-			return
-		}
-
-		if err := cmd.JSONStdout(&HostGoEnv); err != nil {
-			log.Error("unmarshal json failed", err)
-			return
-		}
-	})
-}
+var BuildConfig GoBuilderConfig
 
 type Task struct {
 	Name    string
@@ -48,8 +15,6 @@ type Task struct {
 }
 
 func main() {
-	motd()
-
 	// read config file suffix
 	goBuilderEnv := os.Getenv("GOBUILDER_ENV")
 
@@ -74,6 +39,8 @@ func main() {
 		log.Error("close file failed", err)
 		return
 	}
+
+	log.DebugEnabled = BuildConfig.Verbose
 
 	commands := os.Args[1:]
 

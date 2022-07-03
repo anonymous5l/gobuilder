@@ -115,12 +115,12 @@ func DockerBuild(name string, pkg *GoBuilderPackage) error {
 
 	goOs := pkg.BuildOS
 	if goOs == "" {
-		goOs = HostGoEnv["GOHOSTOS"]
+		goOs = runtime.GOOS
 	}
 
 	goArch := pkg.BuildArch
 	if goArch == "" {
-		goArch = HostGoEnv["GOHOSTARCH"]
+		goArch = runtime.GOARCH
 	}
 
 	goVersion := BuildConfig.Version

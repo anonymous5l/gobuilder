@@ -50,8 +50,8 @@ func GoBuildArgs(gitBranch, gitShortHash, goVersion, name string, pkg *GoBuilder
 			"-X", "'"+pkg.VerbosePackage+".BuildTool=gobuilder/"+
 				goVersion+
 				"/"+pkg.BuildMode+
-				"/"+HostGoEnv["GOHOSTOS"]+
-				"/"+HostGoEnv["GOHOSTARCH"]+"'",
+				"/"+runtime.GOOS+
+				"/"+runtime.GOARCH+"'",
 		)
 
 		if gitShortHash != "" {
@@ -94,7 +94,7 @@ func HostBuild(name string, pkg *GoBuilderPackage) error {
 	cmd.AppendArgs("build").
 		AppendArgs(args...)
 
-	log.Log("Start building host package `" + name + "`")
+	log.Debug("build command", cmd.String(), "-", name)
 
 	if err := cmd.Start(); err != nil {
 		return err

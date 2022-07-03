@@ -8,7 +8,7 @@ packages:
         version:
             major: 1
             minor: 1
-            patch: 60
+            patch: 61
         dest: bin
     hello-world:
         package: gobuilder/cli
@@ -19,7 +19,7 @@ packages:
         version:
             major: 1
             minor: 1
-            patch: 65
+            patch: 66
         dest: bin
 version: 1.18.3
 parallel: 5

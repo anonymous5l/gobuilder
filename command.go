@@ -49,12 +49,21 @@ func (c *Command) AppendArgs(arg ...string) *Command {
 	return c
 }
 
-func (c *Command) Start() error {
+func (c *Command) PrepareCommand() {
 	c.cmd.Env = os.Environ()
 	for k, v := range c.env {
 		c.cmd.Env = append(c.cmd.Env, k+"="+v)
 	}
+}
+
+func (c *Command) Start() error {
+	c.PrepareCommand()
 	return c.cmd.Start()
+}
+
+func (c *Command) String() string {
+	c.PrepareCommand()
+	return strings.Join(c.cmd.Env, " ") + c.cmd.Path + " " + strings.Join(c.cmd.Args, " ")
 }
 
 func (c *Command) Wait() error {
